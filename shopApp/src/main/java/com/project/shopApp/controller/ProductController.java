@@ -1,0 +1,167 @@
+package com.project.shopApp.controller;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import com.project.shopApp.common.exceptions.CheckSizeImagesException;
+import com.project.shopApp.common.exceptions.CheckTypeOfImageException;
+import com.project.shopApp.dtos.ProductImageDto;
+import com.project.shopApp.dtos.ProductRequestDto;
+import com.project.shopApp.dtos.ProductResponseDto;
+import com.project.shopApp.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("api/v1/products")
+public class ProductController {
+    @Autowired
+    private ProductService productService;
+    @GetMapping()
+    public ResponseEntity<String> getAllProduct(@RequestParam int page, @RequestParam int limit) {
+        return ResponseEntity.ok("This is get method");
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProductById(@RequestParam int page, @RequestParam int limit, @PathVariable int id) {
+        ProductResponseDto productResponseDto = productService.getProductById(id);
+        return ResponseEntity.ok(productResponseDto);
+    }
+
+    @PostMapping(value="/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE )
+    public ResponseEntity<?> insertProductWithImage(@Valid @ModelAttribute ProductResponseDto productResponseDto,
+                                           BindingResult bindingResult
+                                           ) {
+        try {
+            if(bindingResult.hasErrors()) { 
+                List<String> error = bindingResult.getFieldErrors()
+                        .stream()
+                        .map(FieldError:: getDefaultMessage)
+                        .toList();
+
+                return ResponseEntity.badRequest().body(error);
+            }
+            MultipartFile file = productResponseDto.getFile();
+            if (file != null) {
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File is too large! Maximum is 10MB");
+                }
+                String contentType = file.getContentType();
+                System.out.println("Content: " + contentType);
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body("File must be an image");
+                }
+
+                storeFile(file);
+            }
+            return ResponseEntity.ok("This is post method with productName: " + productResponseDto);
+        } catch (IOException |ResponseStatusException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping()
+    public ResponseEntity<?> insertProductWithImages(
+            @Valid @RequestBody ProductRequestDto productResquestDto,
+            BindingResult bindingResult
+    ) {
+        try {
+            if(bindingResult.hasErrors()) {
+                List<String> error = bindingResult.getFieldErrors()
+                        .stream()
+                        .map(FieldError:: getDefaultMessage)
+                        .toList();
+
+                return ResponseEntity.badRequest().body(error);
+            }
+            ProductResponseDto productResponseDto1 = productService.createProduct(productResquestDto);
+
+            return ResponseEntity.ok(productResponseDto1);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "uploads/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadImages(
+            @Valid @PathVariable Long id,
+            @Valid @RequestParam("files") List<MultipartFile> files
+    ) throws IOException {
+        ProductResponseDto productResponseDto = productService.getProductById(id);
+        files = files == null ? new ArrayList<>() : files;
+
+        if (files.size() > 5){
+            throw new CheckSizeImagesException();
+        }
+        List<ProductImageDto> productImageDtos = new ArrayList<>();
+        for (MultipartFile file: files) {
+            if (file.getSize() == 0) {
+                continue;
+            }
+            if (file != null) {
+                if (file.getSize() > 10 * 1024 * 1024) {
+                    throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File is too large! Maximum is 10MB");
+                }
+                String contentType = file.getContentType();
+                System.out.println("Content: " + contentType);
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    throw new CheckTypeOfImageException();
+                }
+
+                String fileName = storeFile(file);
+                ProductImageDto productImageDto = productService.createProductImage(
+                        productResponseDto.getId(),
+                        ProductImageDto.builder().imageUrl(fileName).build()
+                );
+                productImageDtos.add(productImageDto);
+            }
+        }
+        return ResponseEntity.ok().body(productImageDtos);
+    }
+    private String storeFile(MultipartFile file) throws IOException {
+        String filename = StringUtils.cleanPath(file.getOriginalFilename());
+        String uniqueFilename = UUID.randomUUID().toString() + "_" + filename;
+
+        Path uploadDir = Paths.get("uploads");
+
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+        Path destination = Paths.get(uploadDir.toString(), uniqueFilename);
+
+        Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+
+        return uniqueFilename;
+    }
+//    {
+//        "name": "dien thoai",
+//            "price": 888,
+//            "thumbnail": "",
+//            "description": "",
+//            "category_id": 1
+//    }
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updateProduct(@PathVariable long id) {
+        return ResponseEntity.ok("This is update method with id = " + id);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok("This is delete method with id = " + id);
+    }
+}
