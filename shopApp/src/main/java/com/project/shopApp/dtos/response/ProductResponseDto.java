@@ -1,6 +1,8 @@
-package com.project.shopApp.dtos;
+package com.project.shopApp.dtos.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.project.shopApp.dtos.CategoryDto;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -31,6 +33,7 @@ public class ProductResponseDto {
     private String description;
 
     @JsonProperty("category_id")
+    @JsonIgnore
     private long categoryId;
 
     private CategoryDto category;
@@ -39,7 +42,8 @@ public class ProductResponseDto {
 
     private LocalDateTime updateAt;
 
+    @JsonIgnore
     private MultipartFile file;
-
+    @JsonIgnore
     private List<MultipartFile> files;
 }

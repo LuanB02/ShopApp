@@ -24,7 +24,7 @@ public class Order {
     private User user;
 
     @Column(name = "fullname", length = 100)
-    private String name;
+    private String fullName;
 
     @Column(name = "email", length = 100)
     private String email;
@@ -62,6 +62,11 @@ public class Order {
     @Column(name = "payment_method")
     private String paymentMethod;
 
-    @Column(name = "active")
+    @Column(name = "is_active")
     private boolean active;
+
+    @PrePersist
+    protected void onCreate() {
+        orderDate = LocalDateTime.now();
+    }
 }

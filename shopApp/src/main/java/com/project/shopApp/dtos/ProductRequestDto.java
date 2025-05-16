@@ -1,5 +1,6 @@
 package com.project.shopApp.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -37,7 +38,9 @@ public class ProductRequestDto {
 
     private LocalDateTime updateAt;
 
+    @JsonIgnore
     private MultipartFile file;
 
+    @JsonIgnore
     private List<MultipartFile> files;
 }

@@ -13,7 +13,7 @@ import java.util.Date;
 @Builder
 @Getter
 @Setter
-public class User {
+public class User extends BaseModel{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +30,7 @@ public class User {
     @Column(name = "password", length = 200)
     private String password;
 
+    @Column(name = "is_active")
     private boolean active;
 
     @Column(name = "date_of_birth")

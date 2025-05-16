@@ -1,8 +1,7 @@
-package com.project.shopApp.dtos;
+package com.project.shopApp.dtos.response;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -13,8 +12,7 @@ import lombok.*;
 @Builder
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_ABSENT)
-public class OrderDto {
+public class OrderResponseDto {
     @JsonProperty("user_id")
     @Min(value = 1, message = "UserId must be > 0")
     private Long userId;
@@ -24,7 +22,6 @@ public class OrderDto {
 
     private String email;
 
-    @JsonProperty("phone_number")
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 
@@ -32,21 +29,17 @@ public class OrderDto {
 
     private String note;
 
-    private String status;
-
-    private boolean active;
-
-    @JsonProperty("total_money")
     @Min(value = 0, message = "total money must be > 0")
     private Float totalMoney;
 
-    @JsonProperty("shipping_method")
+    private boolean active;
+
+    private String status;
+
     private String shippingMethod;
 
-    @JsonProperty("shipping_address")
     private String shippingAddress;
 
-    @JsonProperty("payment_method")
     private String paymentMethod;
 
 }

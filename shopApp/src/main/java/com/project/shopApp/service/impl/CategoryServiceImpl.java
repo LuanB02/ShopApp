@@ -1,10 +1,10 @@
 package com.project.shopApp.service.impl;
 
 import com.project.shopApp.common.exceptions.CheckDuplicateException;
-import com.project.shopApp.common.exceptions.CheckEmptyItemException;
+import com.project.shopApp.common.exceptions.CheckEmptyCategoriesException;
+import com.project.shopApp.common.exceptions.CheckEmptyCategoryException;
 import com.project.shopApp.common.logger.AbstractMessage;
 import com.project.shopApp.dtos.CategoryDto;
-import com.project.shopApp.common.exceptions.CheckEmptyItemsException;
 import com.project.shopApp.mapper.CategoryMapping;
 import com.project.shopApp.models.Category;
 import com.project.shopApp.repository.CategoryRepository;
@@ -46,7 +46,7 @@ public class CategoryServiceImpl extends AbstractMessage implements CategoryServ
         Optional<Category> category = categoryRepository.findById(categoryId);
         if (category.isEmpty()){
             logger.error("ItemNotFound: {}", getMessage("ItemNotFound"));
-            throw new CheckEmptyItemException(categoryId);
+            throw new CheckEmptyCategoryException(categoryId);
         }
         logger.info("CategoryFound: {}", getMessage("ItemFound"));
         return CategoryMapping.INSTANCE.toDto(category.get());
@@ -57,7 +57,7 @@ public class CategoryServiceImpl extends AbstractMessage implements CategoryServ
         List<Category> categories = categoryRepository.findAll();
         if (categories.isEmpty()){
             logger.error("ItemNotFound: {}", getMessage("ItemNotFound"));
-            throw new CheckEmptyItemsException();
+            throw new CheckEmptyCategoriesException();
         }
         logger.info("CategoriesFound: {}", getMessage("ItemFound"));
         return CategoryMapping.INSTANCE.toListDto(categories);
@@ -74,7 +74,7 @@ public class CategoryServiceImpl extends AbstractMessage implements CategoryServ
             return CategoryMapping.INSTANCE.toDto(categoryRepository.save(category));
         } else {
             logger.error("ItemNotFound: {}", getMessage("ItemNotFound"));
-            throw new CheckEmptyItemException(categoryId);
+            throw new CheckEmptyCategoryException(categoryId);
         }
     }
 
@@ -86,7 +86,7 @@ public class CategoryServiceImpl extends AbstractMessage implements CategoryServ
             categoryRepository.deleteById(category.get().getId());
         } else {
             logger.error("ItemNotFound: {}", getMessage("ItemNotFound"));
-            throw new CheckEmptyItemException(id);
+            throw new CheckEmptyCategoryException(id);
         }
     }
 }
